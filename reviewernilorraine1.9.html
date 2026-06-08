@@ -1,0 +1,2368 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>The Self Mock Test</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --ink: #17201b;
+            --muted: #5d6b62;
+            --line: #d8dfd8;
+            --paper: #fbfcf8;
+            --panel: #ffffff;
+            --mint: #d7f2df;
+            --mint-strong: #237548;
+            --rose: #ffe1df;
+            --rose-strong: #a6342c;
+            --gold: #f4c96b;
+            --teal: #d8eef0;
+            --blue: #2b6574;
+            --shadow: 0 18px 50px rgba(23, 32, 27, 0.12);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            background:
+                linear-gradient(135deg, rgba(216, 238, 240, 0.72), rgba(215, 242, 223, 0.58) 46%, rgba(244, 201, 107, 0.2)),
+                var(--paper);
+            color: var(--ink);
+            min-height: 100dvh;
+            overflow-x: hidden;
+            letter-spacing: 0;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        button {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .app {
+            width: min(1180px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 28px 0 44px;
+        }
+
+        .topbar {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: end;
+            gap: 18px;
+            padding: 18px 0 22px;
+        }
+
+        .topbar>*,
+        .layout>* {
+            min-width: 0;
+        }
+
+        .eyebrow {
+            margin: 0 0 6px;
+            color: var(--blue);
+            font-size: 0.78rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(2rem, 5vw, 4rem);
+            line-height: 0.95;
+            letter-spacing: 0;
+        }
+
+        .subline {
+            margin: 12px 0 0;
+            color: var(--muted);
+            max-width: 680px;
+            line-height: 1.55;
+            overflow-wrap: anywhere;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .btn {
+            border: 1px solid var(--ink);
+            background: var(--ink);
+            color: white;
+            border-radius: 8px;
+            padding: 11px 14px;
+            min-height: 44px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 8px 0 rgba(23, 32, 27, 0.16);
+            transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+            min-width: 0;
+            touch-action: manipulation;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 0 rgba(23, 32, 27, 0.13);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 5px 0 rgba(23, 32, 27, 0.16);
+        }
+
+        .btn.secondary {
+            background: white;
+            color: var(--ink);
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(260px, 310px) minmax(0, 1fr);
+            gap: 20px;
+            align-items: start;
+        }
+
+        .status {
+            position: sticky;
+            top: 18px;
+            max-height: calc(100dvh - 36px);
+            overflow: auto;
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(14px);
+        }
+
+        .score {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .metric {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 12px;
+            background: var(--panel);
+        }
+
+        .metric strong {
+            display: block;
+            font-size: 1.6rem;
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+
+        .metric span {
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        .progress {
+            height: 12px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            overflow: hidden;
+            background: #eef3ed;
+            margin: 10px 0 14px;
+        }
+
+        .progress>div {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--mint-strong), var(--gold));
+            transition: width 180ms ease;
+        }
+
+        .pillrow {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .pill {
+            border: 1px solid var(--line);
+            background: #f7faf6;
+            color: var(--muted);
+            border-radius: 999px;
+            padding: 7px 10px;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        .result {
+            display: none;
+            margin-top: 14px;
+            padding: 13px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            background: var(--teal);
+            color: #183a43;
+            line-height: 1.45;
+            font-weight: 750;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .question-nav {
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid var(--line);
+        }
+
+        .question-nav-title {
+            margin: 0 0 10px;
+            color: var(--muted);
+            font-size: 0.82rem;
+            font-weight: 850;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .question-nav-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 8px;
+            max-height: min(380px, calc(100dvh - 350px));
+            overflow-y: auto;
+            padding-right: 2px;
+        }
+
+        .nav-btn {
+            display: inline-grid;
+            place-items: center;
+            aspect-ratio: 1;
+            min-height: 42px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #ffffff;
+            color: var(--muted);
+            font-weight: 850;
+            cursor: pointer;
+            transition: border-color 140ms ease, background 140ms ease, color 140ms ease, transform 140ms ease;
+            touch-action: manipulation;
+        }
+
+        .nav-btn:hover {
+            border-color: var(--blue);
+            color: var(--ink);
+            transform: translateY(-1px);
+        }
+
+        .nav-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.42;
+            transform: none;
+        }
+
+        .nav-btn.answered {
+            border-color: var(--mint-strong);
+            background: var(--mint);
+            color: var(--mint-strong);
+        }
+
+        .nav-btn.current {
+            border-color: var(--ink);
+            box-shadow: inset 0 0 0 2px var(--ink);
+            color: var(--ink);
+        }
+
+        .quiz-stage {
+            display: grid;
+            gap: 12px;
+            min-width: 0;
+            width: 100%;
+            scroll-margin-top: 18px;
+        }
+
+        .question-list {
+            display: grid;
+            gap: 14px;
+        }
+
+        .question-card {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.94);
+            box-shadow: 0 10px 28px rgba(23, 32, 27, 0.08);
+            overflow: hidden;
+            min-width: 0;
+            scroll-margin-top: 18px;
+        }
+
+        .question-head {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+            gap: 12px;
+            align-items: start;
+            padding: 18px 18px 10px;
+        }
+
+        .number {
+            width: 38px;
+            height: 38px;
+            display: inline-grid;
+            place-items: center;
+            border-radius: 8px;
+            background: var(--ink);
+            color: white;
+            font-weight: 900;
+            flex: 0 0 auto;
+        }
+
+        .question-text {
+            margin: 3px 0 0;
+            font-weight: 850;
+            line-height: 1.38;
+            overflow-wrap: anywhere;
+        }
+
+        .choices {
+            display: grid;
+            gap: 9px;
+            padding: 0 18px 18px;
+            min-width: 0;
+        }
+
+        .choice {
+            display: grid;
+            grid-template-columns: 34px minmax(0, 1fr);
+            gap: 10px;
+            align-items: start;
+            width: 100%;
+            min-height: 56px;
+            min-width: 0;
+            text-align: left;
+            border: 1px solid var(--line);
+            background: #ffffff;
+            color: var(--ink);
+            border-radius: 8px;
+            padding: 13px;
+            cursor: pointer;
+            transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
+            touch-action: manipulation;
+        }
+
+        .choice:hover {
+            border-color: var(--blue);
+            transform: translateY(-1px);
+        }
+
+        .choice.selected {
+            border-color: var(--ink);
+            background: #f8fbf2;
+        }
+
+        .choice.correct {
+            border-color: var(--mint-strong);
+            background: var(--mint);
+        }
+
+        .choice.incorrect.selected {
+            border-color: var(--rose-strong);
+            background: var(--rose);
+        }
+
+        .choice.locked {
+            cursor: default;
+            transform: none;
+        }
+
+        .question-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .question-controls .btn {
+            min-width: 150px;
+        }
+
+        .btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn:focus-visible,
+        .choice:focus-visible,
+        .nav-btn:focus-visible {
+            outline: 3px solid rgba(43, 101, 116, 0.35);
+            outline-offset: 2px;
+        }
+
+        .letter {
+            width: 28px;
+            height: 28px;
+            display: inline-grid;
+            place-items: center;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            color: var(--muted);
+            font-weight: 900;
+            background: #f8faf7;
+        }
+
+        .choice.correct .letter {
+            border-color: var(--mint-strong);
+            color: var(--mint-strong);
+            background: white;
+        }
+
+        .choice.incorrect.selected .letter {
+            border-color: var(--rose-strong);
+            color: var(--rose-strong);
+            background: white;
+        }
+
+        .choice-text {
+            min-width: 0;
+            line-height: 1.42;
+            font-weight: 690;
+            overflow-wrap: anywhere;
+        }
+
+        .feedback {
+            display: none;
+            grid-column: 2;
+            color: var(--muted);
+            line-height: 1.45;
+            font-size: 0.95rem;
+            margin-top: 7px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(93, 107, 98, 0.18);
+            overflow-wrap: anywhere;
+        }
+
+        .choice.show-feedback .feedback {
+            display: block;
+        }
+
+        .feedback strong {
+            color: var(--ink);
+        }
+
+        .empty-warning {
+            display: none;
+            margin-top: 12px;
+            color: var(--rose-strong);
+            font-weight: 800;
+            line-height: 1.4;
+        }
+
+        .empty-warning.show {
+            display: block;
+        }
+
+        @media (max-width: 860px) {
+            .app {
+                width: 100%;
+                padding: 10px 12px calc(86px + env(safe-area-inset-bottom));
+            }
+
+            .topbar {
+                grid-template-columns: 1fr;
+                gap: 12px;
+                padding: 10px 0 12px;
+            }
+
+            .eyebrow {
+                font-size: 0.72rem;
+            }
+
+            h1 {
+                font-size: clamp(1.65rem, 8vw, 2.45rem);
+                line-height: 1;
+            }
+
+            .subline {
+                margin-top: 8px;
+                font-size: 0.95rem;
+            }
+
+            .layout {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .toolbar {
+                display: flex;
+                justify-content: normal;
+                gap: 8px;
+                width: 100%;
+            }
+
+            .btn {
+                width: auto;
+                min-height: 48px;
+                padding: 11px 10px;
+                box-shadow: 0 5px 0 rgba(23, 32, 27, 0.14);
+            }
+
+            .toolbar .btn {
+                flex: 1 1 0;
+                min-width: 0;
+            }
+
+            .status {
+                position: sticky;
+                top: 0;
+                z-index: 20;
+                max-height: none;
+                overflow: visible;
+                margin: 0 -12px;
+                padding: 10px 12px 12px;
+                border-left: 0;
+                border-right: 0;
+                border-radius: 0 0 8px 8px;
+                background: rgba(255, 255, 255, 0.94);
+            }
+
+            .score {
+                gap: 8px;
+                margin-bottom: 8px;
+            }
+
+            .metric {
+                padding: 8px 10px;
+            }
+
+            .metric strong {
+                font-size: 1.25rem;
+            }
+
+            .metric span {
+                font-size: 0.78rem;
+            }
+
+            .progress {
+                height: 10px;
+                margin: 8px 0 10px;
+            }
+
+            .pillrow {
+                gap: 6px;
+            }
+
+            .pill {
+                padding: 5px 8px;
+                font-size: 0.76rem;
+            }
+
+            .result {
+                margin-top: 10px;
+                padding: 10px;
+            }
+
+            .empty-warning {
+                margin-top: 8px;
+                font-size: 0.85rem;
+            }
+
+            .question-nav {
+                margin-top: 10px;
+                padding-top: 10px;
+            }
+
+            .question-nav-title {
+                margin-bottom: 7px;
+                font-size: 0.72rem;
+            }
+
+            .question-nav-grid {
+                display: flex;
+                gap: 7px;
+                max-height: none;
+                overflow-x: auto;
+                overflow-y: hidden;
+                padding: 0 2px 4px;
+                scroll-snap-type: x proximity;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .nav-btn {
+                flex: 0 0 40px;
+                width: 40px;
+                min-height: 40px;
+                scroll-snap-align: center;
+            }
+
+            .quiz-stage {
+                gap: 10px;
+                scroll-margin-top: 168px;
+            }
+
+            .question-card {
+                box-shadow: 0 8px 22px rgba(23, 32, 27, 0.08);
+            }
+
+            .question-head {
+                padding: 15px 14px 9px;
+            }
+
+            .choices {
+                gap: 8px;
+                padding: 0 14px 14px;
+            }
+
+            .choice {
+                padding: 12px 10px;
+            }
+
+            .question-controls {
+                position: sticky;
+                bottom: 0;
+                z-index: 15;
+                display: flex;
+                gap: 8px;
+                width: 100%;
+                margin: 0;
+                padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+                background: linear-gradient(180deg, rgba(251, 252, 248, 0), rgba(251, 252, 248, 0.96) 24%, var(--paper));
+                backdrop-filter: blur(12px);
+            }
+
+            .question-controls .btn {
+                flex: 1 1 0;
+                min-width: 0;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .app {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+
+            .status {
+                margin-right: -10px;
+                margin-left: -10px;
+                padding-right: 10px;
+                padding-left: 10px;
+            }
+
+            .question-head {
+                grid-template-columns: auto minmax(0, 1fr);
+                gap: 10px;
+            }
+
+            .number {
+                width: 34px;
+                height: 34px;
+            }
+
+            .question-text {
+                font-size: 1rem;
+            }
+
+            .choice {
+                grid-template-columns: 30px minmax(0, 1fr);
+            }
+
+            .feedback {
+                grid-column: 1 / -1;
+                font-size: 0.9rem;
+            }
+
+            .question-controls {
+                margin-right: 0;
+                margin-left: 0;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .btn {
+                font-size: 0.92rem;
+            }
+
+            .nav-btn {
+                flex-basis: 38px;
+                width: 38px;
+                min-height: 38px;
+            }
+        }
+
+        @media (hover: none) {
+            .btn:hover,
+            .choice:hover,
+            .nav-btn:hover {
+                transform: none;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto;
+            }
+
+            *,
+            *::before,
+            *::after {
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="app">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">50-item multiple choice</p>
+                <h1>The Self Mock Test</h1>
+                <p class="subline">Sociological, anthropological, and Eastern-Western views of the self.</p>
+            </div>
+            <div class="toolbar" aria-label="Quiz actions">
+                <button class="btn secondary" id="retakeBtn" type="button">New Attempt</button>
+                <button class="btn" id="checkBtn" type="button">Check Answers</button>
+            </div>
+        </header>
+
+        <section class="layout">
+            <aside class="status" aria-label="Test status">
+                <div class="score">
+                    <div class="metric">
+                        <strong id="answeredCount">0</strong>
+                        <span>Answered</span>
+                    </div>
+                    <div class="metric">
+                        <strong id="scoreCount">--</strong>
+                        <span>Score</span>
+                    </div>
+                </div>
+                <div class="progress" aria-hidden="true">
+                    <div id="progressBar"></div>
+                </div>
+                <div class="pillrow">
+                    <span class="pill" id="itemCount">50 items</span>
+                    <span class="pill" id="statePill">In progress</span>
+                </div>
+                <div class="result" id="resultBox"></div>
+                <div class="empty-warning" id="warningBox">Some items are unanswered. They will be counted as incorrect
+                    when checked.</div>
+                <nav class="question-nav" aria-label="Question navigation">
+                    <p class="question-nav-title">Questions</p>
+                    <div class="question-nav-grid" id="questionNav"></div>
+                </nav>
+            </aside>
+
+            <div class="quiz-stage">
+                <section class="question-list" id="questionList" aria-live="polite"></section>
+                <div class="question-controls" aria-label="Question controls">
+                    <button class="btn secondary" id="prevQuestionBtn" type="button">Previous</button>
+                    <button class="btn" id="nextQuestionBtn" type="button">Next Question</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const quizItems = [
+            {
+                id: "q01",
+                question: "Which statement best defines sociology?",
+                choices: [
+                    {
+                        text: "The study of human behavior, including social behavior, society, social relationships, social interaction, and culture.",
+                        correct: true,
+                        feedback: "Correct. Sociology is described as the study of human behavior, with attention to social behavior, society, patterns of social relationships, social interaction, and the culture around everyday life."
+                    },
+                    {
+                        text: "The interpretation of human behavior based on material remains through time.",
+                        correct: false,
+                        feedback: "Incorrect. This describes archeology, which interprets human behavior through material remains. Sociology focuses on human behavior in society and social interaction."
+                    },
+                    {
+                        text: "The study of biological and behavioral aspects of humans, ancestors, and non-human primates.",
+                        correct: false,
+                        feedback: "Incorrect. This describes biological or physical anthropology. Sociology centers on social behavior, society, social relationships, interaction, and culture."
+                    },
+                    {
+                        text: "The study of human languages and their social and cultural contexts across time.",
+                        correct: false,
+                        feedback: "Incorrect. This describes linguistic anthropology. Sociology is broader here: it studies human behavior, especially social behavior and everyday social life."
+                    }
+                ]
+            },
+            {
+                id: "q02",
+                question: "In the looking-glass self, how is self-understanding constructed?",
+                choices: [
+                    {
+                        text: "Through a person's perception of how others view them.",
+                        correct: true,
+                        feedback: "Correct. The looking-glass self explains that self-understanding is constructed partly from a person's perception of how others see and judge them."
+                    },
+                    {
+                        text: "Through biological needs and instincts alone.",
+                        correct: false,
+                        feedback: "Incorrect. Reducing human culture only to biological needs and instincts is given as an example of reductionism, not the looking-glass self."
+                    },
+                    {
+                        text: "Through material remains left behind through time.",
+                        correct: false,
+                        feedback: "Incorrect. Material remains are connected with archeology. The looking-glass self depends on imagined appearance, interpreted judgment, and feelings based on others' views."
+                    },
+                    {
+                        text: "Through refusing all social expectations and acting only spontaneously.",
+                        correct: false,
+                        feedback: "Incorrect. Spontaneity is linked with Mead's \"I.\" Cooley's looking-glass self focuses on how we imagine and interpret the judgments of others."
+                    }
+                ]
+            },
+            {
+                id: "q03",
+                question: "Which sequence best matches the looking-glass self process?",
+                choices: [
+                    {
+                        text: "Imagine how we appear, interpret others' judgment, feel pride or shame, then respond based on that interpretation.",
+                        correct: true,
+                        feedback: "Correct. The process begins with imagining appearance, moves to interpreting others' judgment, produces pride or shame, and leads to a response based on that interpretation."
+                    },
+                    {
+                        text: "Learn language, play, and games, then develop the self through social activities.",
+                        correct: false,
+                        feedback: "Incorrect. Language, play, and games are Mead's activities for developing the self. The looking-glass self specifically uses imagined appearance and judgment."
+                    },
+                    {
+                        text: "Take on roles, act them out, and present a favorable impression to an audience.",
+                        correct: false,
+                        feedback: "Incorrect. That describes dramaturgy. The looking-glass self is about imagined appearance, interpreted judgment, pride or shame, and response."
+                    },
+                    {
+                        text: "Focus on personal autonomy, fulfill personal needs, and express oneself.",
+                        correct: false,
+                        feedback: "Incorrect. This describes the independent self-view. The looking-glass self concerns the perceived view and judgment of others."
+                    }
+                ]
+            },
+            {
+                id: "q04",
+                question: "According to Mead, how is the social self developed?",
+                choices: [
+                    {
+                        text: "Over time from social experiences and activities.",
+                        correct: true,
+                        feedback: "Correct. Mead's theory says the self develops over time from social experiences and social activities."
+                    },
+                    {
+                        text: "At birth as a fixed part of the body.",
+                        correct: false,
+                        feedback: "Incorrect. The self is described as emerging from social experience; it is not part of the body and does not exist at birth."
+                    },
+                    {
+                        text: "By stacking physical, biological, psychological, and social models without interrelation.",
+                        correct: false,
+                        feedback: "Incorrect. That is the stratigraphic approach, a pitfall to avoid. Mead connects development of the self with social experiences and activities."
+                    },
+                    {
+                        text: "By treating another culture as superior to one's own culture.",
+                        correct: false,
+                        feedback: "Incorrect. Thinking another culture is superior to one's own is xenocentrism. Mead's self develops through social experience and activity."
+                    }
+                ]
+            },
+            {
+                id: "q05",
+                question: "Which three activities develop the self in Mead's theory?",
+                choices: [
+                    {
+                        text: "Language, play, and games.",
+                        correct: true,
+                        feedback: "Correct. Mead identifies language, play, and games as the three activities that develop the self."
+                    },
+                    {
+                        text: "Archeology, cultural anthropology, and linguistic anthropology.",
+                        correct: false,
+                        feedback: "Incorrect. These are anthropology subdisciplines. Mead's listed activities are language, play, and games."
+                    },
+                    {
+                        text: "Interaction order, dramaturgy, and impression management.",
+                        correct: false,
+                        feedback: "Incorrect. These are Goffman-related ideas. Mead's activities for self-development are language, play, and games."
+                    },
+                    {
+                        text: "Form, sensation, and perception.",
+                        correct: false,
+                        feedback: "Incorrect. These are among Buddhism's aggregates of existence. Mead names language, play, and games."
+                    }
+                ]
+            },
+            {
+                id: "q06",
+                question: "What does Mead's \"Me\" refer to?",
+                choices: [
+                    {
+                        text: "The socialized aspect made up of learned behaviors, attitudes, and expectations of others and society.",
+                        correct: true,
+                        feedback: "Correct. The \"Me\" is the socialized side of the self: learned behaviors, attitudes, and expectations from others and society."
+                    },
+                    {
+                        text: "The spontaneous, creative, and unpredictable aspect that reacts to social expectations.",
+                        correct: false,
+                        feedback: "Incorrect. This describes Mead's \"I.\" The \"Me\" is the learned and socialized aspect of the self."
+                    },
+                    {
+                        text: "The self that is defined by significant relationships and community status.",
+                        correct: false,
+                        feedback: "Incorrect. This matches Confucian relational identity. Mead's \"Me\" is the socialized aspect learned from society."
+                    },
+                    {
+                        text: "The self seen as an illusion born out of ignorance and attempts to hold or control things.",
+                        correct: false,
+                        feedback: "Incorrect. This describes the Buddhist view of the self. Mead's \"Me\" is the socialized self shaped by learned expectations."
+                    }
+                ]
+            },
+            {
+                id: "q07",
+                question: "What does Mead's \"I\" refer to?",
+                choices: [
+                    {
+                        text: "The spontaneous, creative, and unpredictable aspect of the self.",
+                        correct: true,
+                        feedback: "Correct. The \"I\" represents the individual's spontaneous, creative, and unpredictable reactions to social expectations."
+                    },
+                    {
+                        text: "The learned behaviors, attitudes, and expectations of society.",
+                        correct: false,
+                        feedback: "Incorrect. This describes Mead's \"Me.\" The \"I\" is the spontaneous and creative response to social expectations."
+                    },
+                    {
+                        text: "The person who follows social etiquette and mannerisms through self-restraint.",
+                        correct: false,
+                        feedback: "Incorrect. Self-restraint and propriety describe Li in Confucianism. Mead's \"I\" is spontaneous, creative, and unpredictable."
+                    },
+                    {
+                        text: "The tendency to view the world in relation to one's group.",
+                        correct: false,
+                        feedback: "Incorrect. This describes the sociocentric model. Mead's \"I\" is the individual's reaction to social expectations."
+                    }
+                ]
+            },
+            {
+                id: "q08",
+                question: "Which statement accurately describes the family as an agent of socialization?",
+                choices: [
+                    {
+                        text: "It reproduces society biologically through procreation and socially through socialization.",
+                        correct: true,
+                        feedback: "Correct. The family is described as reproducing society both biologically through procreation and socially through socialization."
+                    },
+                    {
+                        text: "Its influence typically peaks during adolescence and usually affects short-term interests.",
+                        correct: false,
+                        feedback: "Incorrect. This describes the peer group. The family is presented as having long-term influence and as reproducing society."
+                    },
+                    {
+                        text: "It works through internet, newspaper, radio, TV news, and television.",
+                        correct: false,
+                        feedback: "Incorrect. Those examples belong to mass media. The family socializes and reproduces society biologically and socially."
+                    },
+                    {
+                        text: "It is mainly the source of expectations from teachers and other students.",
+                        correct: false,
+                        feedback: "Incorrect. Teachers and other students are tied to school. The family is the agent connected with procreation and socialization."
+                    }
+                ]
+            },
+            {
+                id: "q09",
+                question: "Which examples are identified with mass media as an agent of socialization?",
+                choices: [
+                    {
+                        text: "Internet, newspaper, radio, TV news, and television.",
+                        correct: true,
+                        feedback: "Correct. Mass media are described as socialization agents through examples such as internet, newspaper, radio, TV news, and television."
+                    },
+                    {
+                        text: "Teachers and other students.",
+                        correct: false,
+                        feedback: "Incorrect. Teachers and other students are the source of expectations in school, not examples of mass media."
+                    },
+                    {
+                        text: "Parents' religious beliefs adopted by children.",
+                        correct: false,
+                        feedback: "Incorrect. That describes religion as an agent of socialization. Mass media examples include internet, newspapers, radio, and television."
+                    },
+                    {
+                        text: "Short-term adolescent interests shaped by peers.",
+                        correct: false,
+                        feedback: "Incorrect. This describes the peer group. Mass media work through media forms such as internet, newspapers, radio, TV news, and television."
+                    }
+                ]
+            },
+            {
+                id: "q10",
+                question: "Which statement best describes peer groups as agents of socialization?",
+                choices: [
+                    {
+                        text: "Their influence typically peaks during adolescence and generally affects short-term interests.",
+                        correct: true,
+                        feedback: "Correct. Peer group influence is described as usually peaking during adolescence and affecting short-term interests."
+                    },
+                    {
+                        text: "They reproduce society biologically and socially.",
+                        correct: false,
+                        feedback: "Incorrect. This describes the family. Peer groups are linked with adolescence and short-term interests."
+                    },
+                    {
+                        text: "They encourage children to think and behave in particular ways through teachers and students.",
+                        correct: false,
+                        feedback: "Incorrect. This describes school. Peer groups are noted for adolescent influence and short-term effects."
+                    },
+                    {
+                        text: "They are the main source of children developing the same religious beliefs as their parents.",
+                        correct: false,
+                        feedback: "Incorrect. That describes religion. Peer groups are associated with adolescent influence and short-term interests."
+                    }
+                ]
+            },
+            {
+                id: "q11",
+                question: "Which pairing correctly matches an agent of socialization with its description?",
+                choices: [
+                    {
+                        text: "School: teachers and other students create expectations that encourage children to think and behave in particular ways.",
+                        correct: true,
+                        feedback: "Correct. School is described through expectations from teachers and other students that encourage particular ways of thinking and behaving."
+                    },
+                    {
+                        text: "Religion: children mainly learn through internet, newspaper, radio, TV news, and television.",
+                        correct: false,
+                        feedback: "Incorrect. Internet, newspaper, radio, TV news, and television belong to mass media. Religion is connected with children developing the same religious beliefs as their parents."
+                    },
+                    {
+                        text: "School: children tend to develop the same religious beliefs as their parents.",
+                        correct: false,
+                        feedback: "Incorrect. That description belongs to religion. School is linked with expectations from teachers and other students."
+                    },
+                    {
+                        text: "Religion: teachers and other students are the source of expectations.",
+                        correct: false,
+                        feedback: "Incorrect. Teachers and other students describe school. Religion is described through children tending to develop the same religious beliefs as their parents."
+                    }
+                ]
+            },
+            {
+                id: "q12",
+                question: "What is the central idea of Goffman's dramaturgical approach?",
+                choices: [
+                    {
+                        text: "People routinely behave like actors on a stage, with everyday social life becoming theatrical.",
+                        correct: true,
+                        feedback: "Correct. Goffman's dramaturgical approach treats social life as theatrical, with people acting through roles, scripts, and actions."
+                    },
+                    {
+                        text: "People's self-understanding is built from their perception of how others view them.",
+                        correct: false,
+                        feedback: "Incorrect. That is Cooley's looking-glass self. Goffman's approach compares everyday life to stage performance."
+                    },
+                    {
+                        text: "The self develops through language, play, and games.",
+                        correct: false,
+                        feedback: "Incorrect. That is Mead's view of self-development. Goffman's dramaturgy uses the idea of actors, roles, scripts, and staged behavior."
+                    },
+                    {
+                        text: "The self is a physical organism with psychological functioning and social attributes.",
+                        correct: false,
+                        feedback: "Incorrect. That is the anthropological perspective on the self. Goffman's approach explains social life through theatrical performance."
+                    }
+                ]
+            },
+            {
+                id: "q13",
+                question: "Which Goffman term refers to controlling how others view us?",
+                choices: [
+                    {
+                        text: "Impression management.",
+                        correct: true,
+                        feedback: "Correct. Impression management is Goffman's term for people's concern with controlling how others view them."
+                    },
+                    {
+                        text: "Interaction order.",
+                        correct: false,
+                        feedback: "Incorrect. Interaction order means what people do in the immediate presence of others, not specifically controlling how others view them."
+                    },
+                    {
+                        text: "Enculturation.",
+                        correct: false,
+                        feedback: "Incorrect. Enculturation is connected with customary behavior and beliefs being passed on. Impression management is the Goffman term for controlling others' views."
+                    },
+                    {
+                        text: "Cultural relativism.",
+                        correct: false,
+                        feedback: "Incorrect. Cultural relativism means understanding beliefs, values, and practices in their own cultural context. Goffman's term is impression management."
+                    }
+                ]
+            },
+            {
+                id: "q14",
+                question: "Which statement correctly distinguishes front stage from back stage behavior?",
+                choices: [
+                    {
+                        text: "Front stage involves roles shown in daily settings; back stage is behavior free from front-stage expectations and norms.",
+                        correct: true,
+                        feedback: "Correct. Front stage involves different roles and behaviors depending on place and time, while back stage is free of the expectations and norms that guide front-stage behavior."
+                    },
+                    {
+                        text: "Front stage is selflessness; back stage is relational identity.",
+                        correct: false,
+                        feedback: "Incorrect. Selflessness is tied to Taoism's ideal self, while relational identity is tied to Confucianism. Front and back stage are Goffman's terms."
+                    },
+                    {
+                        text: "Front stage is the biological self; back stage is the physical self.",
+                        correct: false,
+                        feedback: "Incorrect. Dividing the self into separate physical or biological pieces resembles the stratigraphic pitfall. Goffman's distinction is about behavior under or away from social expectations."
+                    },
+                    {
+                        text: "Front stage is collectivism; back stage is egoism.",
+                        correct: false,
+                        feedback: "Incorrect. Egoism and collectivism are Eastern-Western contrast terms. Front stage and back stage describe social performance and freedom from front-stage norms."
+                    }
+                ]
+            },
+            {
+                id: "q15",
+                question: "Which statement best summarizes the self as described in the social view?",
+                choices: [
+                    {
+                        text: "The self is reflective, takes the role of others, and emerges from social experience involving communication and symbols.",
+                        correct: true,
+                        feedback: "Correct. The self is described as reflective and reflexive, able to take the role of others, and emerging from social experience through communication and shared symbols."
+                    },
+                    {
+                        text: "The self is only a collection of physical, biological, psychological, and social pieces.",
+                        correct: false,
+                        feedback: "Incorrect. Treating the self as separate pieces without integration is the stratigraphic approach, a pitfall. The social view describes a reflective self emerging from social experience."
+                    },
+                    {
+                        text: "The self is explained only by biological needs and instincts.",
+                        correct: false,
+                        feedback: "Incorrect. Reducing culture only to biological needs and instincts is an example of reductionism. The self is linked with communication, symbols, and taking the role of others."
+                    },
+                    {
+                        text: "The self is defined only by personal autonomy and internal attributes.",
+                        correct: false,
+                        feedback: "Incorrect. Personal autonomy and internal attributes describe the independent self-view. The social summary emphasizes social experience, communication, symbols, and role-taking."
+                    }
+                ]
+            },
+            {
+                id: "q16",
+                question: "What do the Greek roots of anthropology mean?",
+                choices: [
+                    {
+                        text: "\"Anthropos\" means human, and \"logos\" means thought or reason.",
+                        correct: true,
+                        feedback: "Correct. Anthropology comes from \"anthropos,\" meaning human, and \"logos,\" meaning thought or reason."
+                    },
+                    {
+                        text: "\"Anthropos\" means society, and \"logos\" means behavior.",
+                        correct: false,
+                        feedback: "Incorrect. Society and behavior are tied to sociology's focus. The stated roots are human and thought or reason."
+                    },
+                    {
+                        text: "\"Anthropos\" means language, and \"logos\" means culture.",
+                        correct: false,
+                        feedback: "Incorrect. Language and cultural context are connected with linguistic anthropology. The roots given are human and thought or reason."
+                    },
+                    {
+                        text: "\"Anthropos\" means nature, and \"logos\" means universe.",
+                        correct: false,
+                        feedback: "Incorrect. Nature and the universe are connected with Taoism's discussion of the Tao. Anthropology's roots mean human and thought or reason."
+                    }
+                ]
+            },
+            {
+                id: "q17",
+                question: "Which statement best describes the scope of anthropology?",
+                choices: [
+                    {
+                        text: "It studies humans and their ancestors through time, including physical characters, environment, social relations, and culture in context.",
+                        correct: true,
+                        feedback: "Correct. Anthropology is described as studying humans and ancestors through time and covering physical characters, environment, social relations, and culture in specific context."
+                    },
+                    {
+                        text: "It studies only immediate behavior in the presence of others.",
+                        correct: false,
+                        feedback: "Incorrect. Immediate behavior in the presence of others is interaction order. Anthropology covers humans and ancestors through time in physical, environmental, social, and cultural contexts."
+                    },
+                    {
+                        text: "It studies only how people present a favorable impression to an audience.",
+                        correct: false,
+                        feedback: "Incorrect. Presenting a favorable impression belongs to dramaturgy. Anthropology has a broader scope involving humans, ancestors, and contextual physical, social, and cultural features."
+                    },
+                    {
+                        text: "It studies only the acquisition of material things in Western culture.",
+                        correct: false,
+                        feedback: "Incorrect. Western culture is described as more inclined toward material acquisition, but anthropology is broader: it studies humans and ancestors through time."
+                    }
+                ]
+            },
+            {
+                id: "q18",
+                question: "Which subdiscipline interprets human behavior based on material remains through time?",
+                choices: [
+                    {
+                        text: "Archeology.",
+                        correct: true,
+                        feedback: "Correct. Archeology is the interpretation of human behavior based on material remains through time."
+                    },
+                    {
+                        text: "Cultural anthropology.",
+                        correct: false,
+                        feedback: "Incorrect. Cultural anthropology explores the diversity of past and present cultures and human society through field research. Material remains point to archeology."
+                    },
+                    {
+                        text: "Biological or physical anthropology.",
+                        correct: false,
+                        feedback: "Incorrect. Biological or physical anthropology studies biological and behavioral aspects of humans, ancestors, and non-human primates. Material remains point to archeology."
+                    },
+                    {
+                        text: "Linguistic anthropology.",
+                        correct: false,
+                        feedback: "Incorrect. Linguistic anthropology concerns human languages and their social and cultural contexts across time. Material remains point to archeology."
+                    }
+                ]
+            },
+            {
+                id: "q19",
+                question: "Which subdiscipline explores the diversity of past and present cultures and aspects of human society through field research?",
+                choices: [
+                    {
+                        text: "Cultural anthropology.",
+                        correct: true,
+                        feedback: "Correct. Cultural anthropology explores past and present cultural diversity and aspects of human society based on research conducted in the field."
+                    },
+                    {
+                        text: "Archeology.",
+                        correct: false,
+                        feedback: "Incorrect. Archeology interprets human behavior through material remains. Field research into cultural diversity belongs to cultural anthropology."
+                    },
+                    {
+                        text: "Linguistic anthropology.",
+                        correct: false,
+                        feedback: "Incorrect. Linguistic anthropology studies human languages and their social and cultural contexts. Cultural diversity through field research belongs to cultural anthropology."
+                    },
+                    {
+                        text: "Sociology.",
+                        correct: false,
+                        feedback: "Incorrect. Sociology studies human and social behavior. The named anthropology subdiscipline for field research into past and present cultures is cultural anthropology."
+                    }
+                ]
+            },
+            {
+                id: "q20",
+                question: "Which subdiscipline studies biological and behavioral aspects of humans, ancestors, and non-human primates?",
+                choices: [
+                    {
+                        text: "Biological or physical anthropology.",
+                        correct: true,
+                        feedback: "Correct. Biological or physical anthropology studies the biological and behavioral aspects of humans, their ancestors, and non-human primates."
+                    },
+                    {
+                        text: "Linguistic anthropology.",
+                        correct: false,
+                        feedback: "Incorrect. Linguistic anthropology focuses on human languages and their contexts. Biological and behavioral aspects belong to biological or physical anthropology."
+                    },
+                    {
+                        text: "Cultural anthropology.",
+                        correct: false,
+                        feedback: "Incorrect. Cultural anthropology explores cultural diversity and human society through field research. Biological and behavioral aspects point to biological or physical anthropology."
+                    },
+                    {
+                        text: "Archeology.",
+                        correct: false,
+                        feedback: "Incorrect. Archeology uses material remains to interpret human behavior through time. Biological and behavioral aspects are the focus of biological or physical anthropology."
+                    }
+                ]
+            },
+            {
+                id: "q21",
+                question: "Which subdiscipline is concerned with human languages, their aspects, and social and cultural contexts across time?",
+                choices: [
+                    {
+                        text: "Linguistic anthropology.",
+                        correct: true,
+                        feedback: "Correct. Linguistic anthropology is concerned with human languages, their aspects, and their social and cultural contexts across time."
+                    },
+                    {
+                        text: "Biological or physical anthropology.",
+                        correct: false,
+                        feedback: "Incorrect. Biological or physical anthropology studies biological and behavioral aspects of humans, ancestors, and non-human primates. Language belongs to linguistic anthropology."
+                    },
+                    {
+                        text: "Cultural anthropology.",
+                        correct: false,
+                        feedback: "Incorrect. Cultural anthropology explores cultures and human society through field research. Human languages across time belong to linguistic anthropology."
+                    },
+                    {
+                        text: "Archeology.",
+                        correct: false,
+                        feedback: "Incorrect. Archeology interprets material remains. Human languages and their social and cultural contexts belong to linguistic anthropology."
+                    }
+                ]
+            },
+            {
+                id: "q22",
+                question: "How does the anthropological perspective describe the self?",
+                choices: [
+                    {
+                        text: "A physical organism possessing psychological functioning and social attributes.",
+                        correct: true,
+                        feedback: "Correct. The anthropological perspective describes the self as a physical organism with psychological functioning and social attributes."
+                    },
+                    {
+                        text: "A spontaneous, creative, and unpredictable reaction to social expectations.",
+                        correct: false,
+                        feedback: "Incorrect. This describes Mead's \"I.\" The anthropological perspective describes the self as physical, psychological, and social."
+                    },
+                    {
+                        text: "A process of controlling how others view a performance.",
+                        correct: false,
+                        feedback: "Incorrect. Controlling how others view us is impression management. The anthropological description combines physical organism, psychological functioning, and social attributes."
+                    },
+                    {
+                        text: "An identity based only on personal autonomy and internal attributes.",
+                        correct: false,
+                        feedback: "Incorrect. Personal autonomy and internal attributes describe the independent self-view. Anthropology describes the self as physical, psychological, and social."
+                    }
+                ]
+            },
+            {
+                id: "q23",
+                question: "Which statement correctly explains why the self is not static?",
+                choices: [
+                    {
+                        text: "It is added to and subtracted from by genetic maturation, learning, forgetting, stress, aging, and disease.",
+                        correct: true,
+                        feedback: "Correct. The self changes through factors such as genetic maturation, learning, forgetting, stress, aging, and disease."
+                    },
+                    {
+                        text: "It is made once through procreation and never changes through socialization.",
+                        correct: false,
+                        feedback: "Incorrect. Procreation and socialization are linked with family, but the self is described as not static and able to undergo transformations."
+                    },
+                    {
+                        text: "It exists at birth as part of the body and remains fixed.",
+                        correct: false,
+                        feedback: "Incorrect. The self is described as emerging from social experience and not existing at birth. In anthropology, it also changes through many life factors."
+                    },
+                    {
+                        text: "It is only a single level of analysis.",
+                        correct: false,
+                        feedback: "Incorrect. Reducing observations to one level is reductionism. The self is not static because it changes through maturation, learning, forgetting, stress, aging, and disease."
+                    }
+                ]
+            },
+            {
+                id: "q24",
+                question: "Which set of qualities is attributed to the culture of oneself?",
+                choices: [
+                    {
+                        text: "Shared, adaptive and maladaptive, symbolic, encompassing, integrated, natural, and learned.",
+                        correct: true,
+                        feedback: "Correct. Culture of oneself is described with these qualities: shared, adaptive and maladaptive, symbolic, encompassing, integrated, natural, and learned."
+                    },
+                    {
+                        text: "Autonomous, independent, personal, internal, self-reliant, and resistant to conformity.",
+                        correct: false,
+                        feedback: "Incorrect. These describe the independent self-view. The listed qualities of culture include shared, symbolic, integrated, natural, and learned."
+                    },
+                    {
+                        text: "Relational, subdued, proper, sincere, righteous, honest, humane, and loyal.",
+                        correct: false,
+                        feedback: "Incorrect. These words point to Confucian ideas and principles. The culture of oneself is described as shared, adaptive and maladaptive, symbolic, encompassing, integrated, natural, and learned."
+                    },
+                    {
+                        text: "Negative, female, night, passive, moon, intuitive, cold, and soft.",
+                        correct: false,
+                        feedback: "Incorrect. These are Yin qualities in the Yin-Yang contrast. The culture of oneself is described through shared and learned symbolic qualities."
+                    }
+                ]
+            },
+            {
+                id: "q25",
+                question: "Which statement best defines culture?",
+                choices: [
+                    {
+                        text: "Customary behavior and beliefs passed on through enculturation.",
+                        correct: true,
+                        feedback: "Correct. Culture is defined as customary behavior and beliefs that are passed on through enculturation."
+                    },
+                    {
+                        text: "The immediate presence of others in social interaction.",
+                        correct: false,
+                        feedback: "Incorrect. Immediate presence of others defines interaction order. Culture is customary behavior and beliefs passed through enculturation."
+                    },
+                    {
+                        text: "The principle of honesty in life.",
+                        correct: false,
+                        feedback: "Incorrect. Honesty in life describes Xin in Confucianism. Culture is customary behavior and beliefs passed through enculturation."
+                    },
+                    {
+                        text: "The natural order of things.",
+                        correct: false,
+                        feedback: "Incorrect. The natural order of things describes Tao. Culture refers to customary behavior and beliefs passed on through enculturation."
+                    }
+                ]
+            },
+            {
+                id: "q26",
+                question: "Which statement best describes an independent construct or independent self-view?",
+                choices: [
+                    {
+                        text: "It emphasizes uniqueness, personal autonomy, internal attributes, and characteristics of an individualistic culture.",
+                        correct: true,
+                        feedback: "Correct. The independent view focuses on uniqueness, personal autonomy, internal attributes, and individualistic culture."
+                    },
+                    {
+                        text: "It emphasizes connections, relationships, group membership, and collectivist culture.",
+                        correct: false,
+                        feedback: "Incorrect. Those describe the interdependent construct or self-view. The independent view defines itself through uniqueness and internal attributes."
+                    },
+                    {
+                        text: "It emphasizes love for immediate family and then society.",
+                        correct: false,
+                        feedback: "Incorrect. Love for immediate family and then society describes Hsiao. The independent view focuses on personal autonomy and internal attributes."
+                    },
+                    {
+                        text: "It emphasizes understanding practices through another person's own culture.",
+                        correct: false,
+                        feedback: "Incorrect. Understanding practices in their own cultural context describes cultural relativism. The independent view emphasizes uniqueness and autonomy."
+                    }
+                ]
+            },
+            {
+                id: "q27",
+                question: "Which statement best describes an interdependent construct or interdependent self-view?",
+                choices: [
+                    {
+                        text: "It emphasizes connections, relationships, group membership, and collectivist culture.",
+                        correct: true,
+                        feedback: "Correct. The interdependent view focuses on relationships and group membership and is connected with collectivist culture, especially exemplified in East Asia."
+                    },
+                    {
+                        text: "It emphasizes personal autonomy, self-reliance, and resistance to conformity.",
+                        correct: false,
+                        feedback: "Incorrect. These belong to the independent self-view. The interdependent view emphasizes connections, relationships, and group membership."
+                    },
+                    {
+                        text: "It emphasizes material remains through time.",
+                        correct: false,
+                        feedback: "Incorrect. Material remains are connected with archeology. The interdependent view concerns relationships, group membership, and collectivist culture."
+                    },
+                    {
+                        text: "It emphasizes a person acting free of front-stage expectations.",
+                        correct: false,
+                        feedback: "Incorrect. Acting free of front-stage expectations describes back-stage behavior. The interdependent view emphasizes ties with others and groups."
+                    }
+                ]
+            },
+            {
+                id: "q28",
+                question: "Which pairing correctly matches the goals and behavior of independent and interdependent self-views?",
+                choices: [
+                    {
+                        text: "Independent: fulfills personal needs and expresses oneself; interdependent: maintains social harmony and contributes to the group.",
+                        correct: true,
+                        feedback: "Correct. Independent goals focus on personal needs, goals, and self-expression, while interdependent goals focus on harmony, fitting in, and group well-being."
+                    },
+                    {
+                        text: "Independent: adjusts behavior to others; interdependent: resists conformity and decides only by personal needs.",
+                        correct: false,
+                        feedback: "Incorrect. This reverses the views. Adjusting behavior to others is interdependent, while self-reliance and resistance to conformity are independent."
+                    },
+                    {
+                        text: "Independent: derives identity from relationships; interdependent: defines itself from internal attributes.",
+                        correct: false,
+                        feedback: "Incorrect. This reverses the key distinction. Independent self-view defines itself from within, while interdependent self-view defines itself through relationships and groups."
+                    },
+                    {
+                        text: "Independent: maintains group harmony; interdependent: fulfills only personal goals.",
+                        correct: false,
+                        feedback: "Incorrect. This reverses the goals. Independent self-view prioritizes personal needs and self-expression; interdependent self-view prioritizes harmony and group well-being."
+                    }
+                ]
+            },
+            {
+                id: "q29",
+                question: "What is the key distinction between independent and interdependent self-views?",
+                choices: [
+                    {
+                        text: "Independent self-definition comes from within; interdependent self-definition comes from relationships with others and groups.",
+                        correct: true,
+                        feedback: "Correct. The main difference is the source of self-definition: independent self-view uses internal personal attributes, while interdependent self-view uses relationships and group ties."
+                    },
+                    {
+                        text: "Independent self-definition comes from material remains; interdependent self-definition comes from field research.",
+                        correct: false,
+                        feedback: "Incorrect. Material remains and field research describe anthropology subdisciplines. The distinction is internal attributes versus relationships and groups."
+                    },
+                    {
+                        text: "Independent self-definition is based on Yin; interdependent self-definition is based on Yang.",
+                        correct: false,
+                        feedback: "Incorrect. Yin and Yang describe opposing but complementary forces. The independent-interdependent distinction is about internal attributes versus relationships and groups."
+                    },
+                    {
+                        text: "Independent self-definition is back stage; interdependent self-definition is front stage.",
+                        correct: false,
+                        feedback: "Incorrect. Front stage and back stage are Goffman's terms. Independent and interdependent self-views differ by whether self-definition comes from within or from relationships."
+                    }
+                ]
+            },
+            {
+                id: "q30",
+                question: "Which systems does anthropology seek to interrelate in studying the human being?",
+                choices: [
+                    {
+                        text: "Psychological, cultural, social, biological, and physical systems.",
+                        correct: true,
+                        feedback: "Correct. Anthropology seeks interrelationships among psychological, cultural, social, biological, and physical systems of the human being."
+                    },
+                    {
+                        text: "Language, play, games, roles, and scripts.",
+                        correct: false,
+                        feedback: "Incorrect. Language, play, and games are Mead's activities, while roles and scripts are Goffman's terms. Anthropology names psychological, cultural, social, biological, and physical systems."
+                    },
+                    {
+                        text: "Internet, newspaper, radio, TV news, and television.",
+                        correct: false,
+                        feedback: "Incorrect. These are mass media examples. Anthropology focuses on the interrelationships among psychological, cultural, social, biological, and physical systems."
+                    },
+                    {
+                        text: "Form, sensation, perception, mental formations, and consciousness.",
+                        correct: false,
+                        feedback: "Incorrect. These are Buddhism's five aggregates. Anthropology's human-being models include psychological, cultural, social, biological, and physical systems."
+                    }
+                ]
+            },
+            {
+                id: "q31",
+                question: "What do the hallmarks of anthropology emphasize?",
+                choices: [
+                    {
+                        text: "Studying the full range of human persons across places, times, and levels of society.",
+                        correct: true,
+                        feedback: "Correct. Anthropology looks at the full range of human persons by studying people in all parts of the world, at different times, and at different levels of society."
+                    },
+                    {
+                        text: "Studying only one level of analysis to explain all observations.",
+                        correct: false,
+                        feedback: "Incorrect. Explaining everything through a single level is reductionism. Anthropology emphasizes universals and variety across places, times, and social levels."
+                    },
+                    {
+                        text: "Studying only the self as a collection of separate pieces.",
+                        correct: false,
+                        feedback: "Incorrect. Treating the self as unintegrated pieces is the stratigraphic approach. Anthropology seeks a holistic concept of the self."
+                    },
+                    {
+                        text: "Studying only social behavior in everyday life.",
+                        correct: false,
+                        feedback: "Incorrect. Social behavior in everyday life is associated with sociology. Anthropology emphasizes a full range of humans across places, times, and social levels."
+                    }
+                ]
+            },
+            {
+                id: "q32",
+                question: "What is the stratigraphic approach?",
+                choices: [
+                    {
+                        text: "Stacking independent models without interrelating them, leaving the self fragmented into separate pieces.",
+                        correct: true,
+                        feedback: "Correct. The stratigraphic approach stacks physical, biological, psychological, and social models without integration, making the self a collection of pieces."
+                    },
+                    {
+                        text: "Reducing all observations to a single level of analysis.",
+                        correct: false,
+                        feedback: "Incorrect. That describes reductionism. The stratigraphic approach stacks multiple independent models without interrelating them."
+                    },
+                    {
+                        text: "Understanding values and practices according to a person's own culture.",
+                        correct: false,
+                        feedback: "Incorrect. That describes cultural relativism. The stratigraphic approach fragments the self by stacking unrelated models."
+                    },
+                    {
+                        text: "Taking on roles and acting them out for a favorable audience impression.",
+                        correct: false,
+                        feedback: "Incorrect. That describes dramaturgy. The stratigraphic approach is about unintegrated layers of models of the self."
+                    }
+                ]
+            },
+            {
+                id: "q33",
+                question: "What is reductionism?",
+                choices: [
+                    {
+                        text: "Interpreting all observations by reducing them to a single level of analysis.",
+                        correct: true,
+                        feedback: "Correct. Reductionism happens when all observations are explained by reducing them to one level of analysis."
+                    },
+                    {
+                        text: "Stacking physical, biological, psychological, and social models without integration.",
+                        correct: false,
+                        feedback: "Incorrect. That describes the stratigraphic approach. Reductionism reduces explanations to a single level."
+                    },
+                    {
+                        text: "Viewing everything in the world in relation to oneself.",
+                        correct: false,
+                        feedback: "Incorrect. That describes the egocentric model. Reductionism is the attempt to explain observations through only one level of analysis."
+                    },
+                    {
+                        text: "Viewing everything in the world in relation to one's group.",
+                        correct: false,
+                        feedback: "Incorrect. That describes the sociocentric model. Reductionism is about reducing explanations to one level of analysis."
+                    }
+                ]
+            },
+            {
+                id: "q34",
+                question: "Which statement accurately connects culture and the self from an anthropological point of view?",
+                choices: [
+                    {
+                        text: "Studying the self includes studying culture, and culture can influence a person's physical being.",
+                        correct: true,
+                        feedback: "Correct. Understanding the self anthropologically includes culture, and culture is described as influencing a person's physical being."
+                    },
+                    {
+                        text: "Studying the self excludes culture because the self is only biological.",
+                        correct: false,
+                        feedback: "Incorrect. Anthropology explicitly includes culture in understanding the self and warns against reducing human culture to biology alone."
+                    },
+                    {
+                        text: "Studying the self avoids learned behavior, ideas, and products.",
+                        correct: false,
+                        feedback: "Incorrect. Culture is described as an integrated system of learned patterns of behavior, ideas, and products characteristic of a society."
+                    },
+                    {
+                        text: "Studying the self means rejecting the idea that people mold their bodies.",
+                        correct: false,
+                        feedback: "Incorrect. People are described as remarkably imaginative in molding their bodies to fit their tastes."
+                    }
+                ]
+            },
+            {
+                id: "q35",
+                question: "Which statement best describes the egocentric model of the self?",
+                choices: [
+                    {
+                        text: "A tendency to view everything in the world in relation to oneself.",
+                        correct: true,
+                        feedback: "Correct. The egocentric model views the world in relation to oneself and is linked with the maxim \"Be true to yourself.\""
+                    },
+                    {
+                        text: "A tendency to view everything in the world in relation to one's group.",
+                        correct: false,
+                        feedback: "Incorrect. That describes the sociocentric model. The egocentric model is self-centered in its view of the world."
+                    },
+                    {
+                        text: "A tendency to understand beliefs based on their own cultural context.",
+                        correct: false,
+                        feedback: "Incorrect. That describes cultural relativism. The egocentric model views the world in relation to oneself."
+                    },
+                    {
+                        text: "A tendency to think another culture is superior to one's own.",
+                        correct: false,
+                        feedback: "Incorrect. That describes xenocentrism. The egocentric model is about viewing the world in relation to oneself."
+                    }
+                ]
+            },
+            {
+                id: "q36",
+                question: "Which statement best describes the sociocentric model of the self?",
+                choices: [
+                    {
+                        text: "A group-centered tendency to view everything in relation to one's group.",
+                        correct: true,
+                        feedback: "Correct. The sociocentric model is group-centered; it views the world in relation to one's group and abides by the group."
+                    },
+                    {
+                        text: "A self-centered tendency to view everything in relation to oneself.",
+                        correct: false,
+                        feedback: "Incorrect. That describes the egocentric model. The sociocentric model centers the group."
+                    },
+                    {
+                        text: "The belief that one's culture is superior to others.",
+                        correct: false,
+                        feedback: "Incorrect. That describes ethnocentrism. The sociocentric model is about viewing the world in relation to one's group."
+                    },
+                    {
+                        text: "The thinking that another culture is superior to one's own.",
+                        correct: false,
+                        feedback: "Incorrect. That describes xenocentrism. The sociocentric model is group-centered."
+                    }
+                ]
+            },
+            {
+                id: "q37",
+                question: "What is cultural relativism?",
+                choices: [
+                    {
+                        text: "Understanding a person's beliefs, values, and practices based on that person's own culture.",
+                        correct: true,
+                        feedback: "Correct. Cultural relativism means beliefs, values, and practices should be understood within a person's own cultural context rather than judged by another culture's criteria."
+                    },
+                    {
+                        text: "Believing that one's culture is superior to other cultures.",
+                        correct: false,
+                        feedback: "Incorrect. That is ethnocentrism. Cultural relativism asks that beliefs, values, and practices be understood within their own cultural context."
+                    },
+                    {
+                        text: "Thinking that another culture is superior to one's own culture.",
+                        correct: false,
+                        feedback: "Incorrect. That is xenocentrism. Cultural relativism focuses on understanding practices based on the person's own culture."
+                    },
+                    {
+                        text: "Explaining all cultural practices through a single biological level.",
+                        correct: false,
+                        feedback: "Incorrect. Explaining observations through one level is reductionism. Cultural relativism uses the person's own cultural context."
+                    }
+                ]
+            },
+            {
+                id: "q38",
+                question: "Which pairing correctly distinguishes ethnocentrism and xenocentrism?",
+                choices: [
+                    {
+                        text: "Ethnocentrism: one's culture is superior; xenocentrism: another culture is superior to one's own.",
+                        correct: true,
+                        feedback: "Correct. Ethnocentrism means believing one's own culture is superior, while xenocentrism means thinking another culture is superior to one's own."
+                    },
+                    {
+                        text: "Ethnocentrism: another culture is superior; xenocentrism: one's culture is superior.",
+                        correct: false,
+                        feedback: "Incorrect. This reverses the terms. Ethnocentrism favors one's own culture; xenocentrism favors another culture over one's own."
+                    },
+                    {
+                        text: "Ethnocentrism: values group membership; xenocentrism: values internal attributes.",
+                        correct: false,
+                        feedback: "Incorrect. Group membership and internal attributes distinguish interdependent and independent self-views. Ethnocentrism and xenocentrism compare cultural superiority."
+                    },
+                    {
+                        text: "Ethnocentrism: follows nature's forces; xenocentrism: follows social etiquette.",
+                        correct: false,
+                        feedback: "Incorrect. Working with nature's forces is Taoism, and social etiquette relates to Li. Ethnocentrism and xenocentrism concern beliefs about cultural superiority."
+                    }
+                ]
+            },
+            {
+                id: "q39",
+                question: "Which core value is named?",
+                choices: [
+                    {
+                        text: "Accountability.",
+                        correct: true,
+                        feedback: "Correct. Accountability is the named core value."
+                    },
+                    {
+                        text: "Xin, the principle of honesty in life.",
+                        correct: false,
+                        feedback: "Incorrect. Xin is a Confucian principle meaning honesty in life. The named core value is accountability."
+                    },
+                    {
+                        text: "Yi, the principle of righteousness.",
+                        correct: false,
+                        feedback: "Incorrect. Yi is a Confucian principle of righteousness. The named core value is accountability."
+                    },
+                    {
+                        text: "Chung, loyalty to one's family and country.",
+                        correct: false,
+                        feedback: "Incorrect. Chung is a Confucian principle of loyalty. The named core value is accountability."
+                    }
+                ]
+            },
+            {
+                id: "q40",
+                question: "Which comparison accurately reflects Eastern and Western culture?",
+                choices: [
+                    {
+                        text: "Western culture focuses on oneself and personal needs; Eastern culture focuses on others and their feelings.",
+                        correct: true,
+                        feedback: "Correct. Western culture is described as focused on oneself and personal needs, while Eastern culture focuses on others and the feelings of others."
+                    },
+                    {
+                        text: "Western culture is collectivist; Eastern culture puts egoism first.",
+                        correct: false,
+                        feedback: "Incorrect. This reverses the comparison. Western culture is connected with egoism, while Eastern culture is connected with collectivism."
+                    },
+                    {
+                        text: "Western culture is tilted toward fewer assets; Eastern culture is more inclined toward material things.",
+                        correct: false,
+                        feedback: "Incorrect. This reverses the material contrast. Western culture is described as more inclined toward acquiring material things, while Eastern culture is tilted toward fewer assets."
+                    },
+                    {
+                        text: "Western culture represents Asia; Eastern culture represents Europe and Northern America.",
+                        correct: false,
+                        feedback: "Incorrect. Eastern is identified with Asia, while Western represents Europe and Northern America."
+                    }
+                ]
+            },
+            {
+                id: "q41",
+                question: "Which statement correctly contrasts individualism and collectivism?",
+                choices: [
+                    {
+                        text: "Individualism treats people as autonomous and prioritizes personal goals; collectivism treats people as interdependent and prioritizes in-group goals.",
+                        correct: true,
+                        feedback: "Correct. Individualism emphasizes autonomy and personal goals, while collectivism emphasizes interdependence within in-groups and in-group goals."
+                    },
+                    {
+                        text: "Individualism behaves mainly through in-group norms; collectivism behaves mainly through personal attitudes.",
+                        correct: false,
+                        feedback: "Incorrect. This reverses the contrast. Individualism behaves more on attitudes, while collectivism is shaped by in-groups and norms."
+                    },
+                    {
+                        text: "Individualism is concerned with maintaining relationships; collectivism is independent from in-groups.",
+                        correct: false,
+                        feedback: "Incorrect. Maintaining relationships is tied to collectivism, while independence from in-groups is tied to individualism."
+                    },
+                    {
+                        text: "Individualism gives priority to group goals; collectivism gives priority to personal goals.",
+                        correct: false,
+                        feedback: "Incorrect. This reverses the priorities. Individualism prioritizes personal goals, while collectivism prioritizes the goals of in-groups."
+                    }
+                ]
+            },
+            {
+                id: "q42",
+                question: "Which pairing correctly matches Western and Eastern contrasts?",
+                choices: [
+                    {
+                        text: "Western: highlights personal achievements and values competition; Eastern: keeps a low profile and values cooperation.",
+                        correct: true,
+                        feedback: "Correct. Western culture is described as highlighting personal achievements and competition, while Eastern culture keeps a low profile, avoids boastfulness, and values cooperation."
+                    },
+                    {
+                        text: "Western: talks about social roles; Eastern: talks about personal attributes.",
+                        correct: false,
+                        feedback: "Incorrect. This reverses the contrast. Westerners talk about personal attributes, while Easterners talk about social roles."
+                    },
+                    {
+                        text: "Western: other persons are part of your self; Eastern: you are distinct from other persons.",
+                        correct: false,
+                        feedback: "Incorrect. This reverses the duality contrast. Western thought emphasizes distinction from others, while Eastern thought sees other persons as part of the self."
+                    },
+                    {
+                        text: "Western: group and social relations are more important; Eastern: focus is on the person.",
+                        correct: false,
+                        feedback: "Incorrect. This reverses the cultural contrast. Western culture is individualistic and focused on the person; Eastern culture is collectivistic and gives importance to group and social relations."
+                    }
+                ]
+            },
+            {
+                id: "q43",
+                question: "Which statement correctly describes Confucianism?",
+                choices: [
+                    {
+                        text: "A system of ethics devised by K'ung Fu-tzu, latinized as Confucius, in sixth-century BC China.",
+                        correct: true,
+                        feedback: "Correct. Confucianism is described as a system of ethics devised by the Chinese scholar K'ung Fu-tzu, latinized to Confucius, in sixth-century BC China."
+                    },
+                    {
+                        text: "Living in the way of the Tao, or the Universe.",
+                        correct: false,
+                        feedback: "Incorrect. Living in the way of the Tao or the Universe describes Taoism. Confucianism is an ethical system linked with K'ung Fu-tzu."
+                    },
+                    {
+                        text: "The teaching that an individual is made of five aggregates of existence.",
+                        correct: false,
+                        feedback: "Incorrect. The five aggregates belong to Buddhism. Confucianism is described as an ethical system from K'ung Fu-tzu."
+                    },
+                    {
+                        text: "A view that rejects one definition of the Tao and prefers a simple lifestyle.",
+                        correct: false,
+                        feedback: "Incorrect. This describes Taoism. Confucianism is the ethical system devised by K'ung Fu-tzu."
+                    }
+                ]
+            },
+            {
+                id: "q44",
+                question: "What does relational identity mean in Confucianism?",
+                choices: [
+                    {
+                        text: "A person is defined by significant relationships, with self-concept interwoven with community or culture.",
+                        correct: true,
+                        feedback: "Correct. In Confucianism, relational identity means a person is defined by significant relationships, and identity is interwoven with community or culture."
+                    },
+                    {
+                        text: "A person is defined from within by personal attributes.",
+                        correct: false,
+                        feedback: "Incorrect. Being defined from within by personal attributes describes the independent self-view. Confucian relational identity is defined through significant relationships."
+                    },
+                    {
+                        text: "A person is defined only by material remains.",
+                        correct: false,
+                        feedback: "Incorrect. Material remains belong to archeology. Confucian relational identity is based on significant relationships and community or culture."
+                    },
+                    {
+                        text: "A person is defined by refusing hierarchy and strictness.",
+                        correct: false,
+                        feedback: "Incorrect. Rejecting hierarchy and strictness is connected with Taoism's contrast to Confucianism. Confucian relational identity centers significant relationships."
+                    }
+                ]
+            },
+            {
+                id: "q45",
+                question: "How is self-cultivation described in Confucianism?",
+                choices: [
+                    {
+                        text: "The ultimate purpose of life, producing a chun-tzu whose virtue remains embedded in social relationships.",
+                        correct: true,
+                        feedback: "Correct. Self-cultivation is described as life's ultimate purpose, and the chun-tzu is a person of virtue or noble character still embedded in social relationships."
+                    },
+                    {
+                        text: "A rejection of strictness that prefers a simple lifestyle and free-flowing views.",
+                        correct: false,
+                        feedback: "Incorrect. That describes Taoism's preference over Confucian strictness. Confucian self-cultivation aims toward the virtuous chun-tzu."
+                    },
+                    {
+                        text: "A process of removing the self from the whole picture entirely.",
+                        correct: false,
+                        feedback: "Incorrect. That describes Buddhism's treatment of the self. Confucian self-cultivation develops the virtuous chun-tzu within social relationships."
+                    },
+                    {
+                        text: "A form of self-reliance that resists conformity and follows personal needs.",
+                        correct: false,
+                        feedback: "Incorrect. Self-reliance and resistance to conformity describe independent self-view behavior. Confucian self-cultivation is tied to virtue and social relationships."
+                    }
+                ]
+            },
+            {
+                id: "q46",
+                question: "Which Confucian principle is correctly matched with its meaning?",
+                choices: [
+                    {
+                        text: "Li: self-restraint and sense of propriety, including social etiquette and mannerisms.",
+                        correct: true,
+                        feedback: "Correct. Li is the principle of self-restraint and propriety, including social etiquette and mannerisms."
+                    },
+                    {
+                        text: "Cheng: love for immediate family and then society.",
+                        correct: false,
+                        feedback: "Incorrect. Love for immediate family and then society is Hsiao. Cheng means sincerity and unwavering devotion to good."
+                    },
+                    {
+                        text: "Hsiao: the principle of righteousness.",
+                        correct: false,
+                        feedback: "Incorrect. Righteousness is Yi. Hsiao means love for the immediate family and then society."
+                    },
+                    {
+                        text: "Yi: sincerity and unwavering devotion to good.",
+                        correct: false,
+                        feedback: "Incorrect. Sincerity and unwavering devotion to good is Cheng. Yi is the principle of righteousness."
+                    }
+                ]
+            },
+            {
+                id: "q47",
+                question: "Which Confucian principle is described as the most important?",
+                choices: [
+                    {
+                        text: "Jen: being kind and humane to fellow beings and helping others.",
+                        correct: true,
+                        feedback: "Correct. Jen is described as the most important principle; it means being kind and humane to fellow beings and helping others."
+                    },
+                    {
+                        text: "Xin: loyalty to one's family and country.",
+                        correct: false,
+                        feedback: "Incorrect. Loyalty to family and country is Chung. Xin means honesty in life."
+                    },
+                    {
+                        text: "Chung: honesty in life.",
+                        correct: false,
+                        feedback: "Incorrect. Honesty in life is Xin. Chung means loyalty to one's family and country."
+                    },
+                    {
+                        text: "Yi: social etiquette and mannerisms.",
+                        correct: false,
+                        feedback: "Incorrect. Social etiquette and mannerisms belong to Li. Yi is the principle of righteousness."
+                    }
+                ]
+            },
+            {
+                id: "q48",
+                question: "Which statement best describes Taoism?",
+                choices: [
+                    {
+                        text: "Living in the way of the Tao or Universe, working with nature and its forces rather than fighting them.",
+                        correct: true,
+                        feedback: "Correct. Taoism is living in the way of the Tao or Universe; it is about the natural order and working with nature and its forces."
+                    },
+                    {
+                        text: "A system of ethics centered on the strict hierarchy of Confucianism.",
+                        correct: false,
+                        feedback: "Incorrect. Taoism rejects the hierarchy and strictness brought by Confucianism and prefers a simple lifestyle."
+                    },
+                    {
+                        text: "The study of customary behavior and beliefs passed on through enculturation.",
+                        correct: false,
+                        feedback: "Incorrect. That defines culture. Taoism is living in the way of the Tao, the natural order of things."
+                    },
+                    {
+                        text: "A view that treats the self as learned behaviors, attitudes, and expectations of society.",
+                        correct: false,
+                        feedback: "Incorrect. Learned behaviors and expectations describe Mead's \"Me.\" Taoism centers the Tao, nature, simplicity, balance, and harmony."
+                    }
+                ]
+            },
+            {
+                id: "q49",
+                question: "Which statement correctly describes Yin-Yang?",
+                choices: [
+                    {
+                        text: "It symbolizes balance and harmony of opposing but complementary forces, such as Yin as night and Yang as day.",
+                        correct: true,
+                        feedback: "Correct. Yin-Yang is the symbol of Taoism and represents balance and harmony between opposing but complementary forces; night belongs to Yin and day belongs to Yang."
+                    },
+                    {
+                        text: "It symbolizes the belief that one's culture is superior to others.",
+                        correct: false,
+                        feedback: "Incorrect. Believing one's culture is superior is ethnocentrism. Yin-Yang symbolizes balance and harmony between complementary opposing forces."
+                    },
+                    {
+                        text: "It symbolizes the process of imagining how one appears to others.",
+                        correct: false,
+                        feedback: "Incorrect. Imagining how one appears to others is part of the looking-glass self. Yin-Yang concerns complementary forces such as female-male, night-day, and cold-hot."
+                    },
+                    {
+                        text: "It symbolizes material remains used to interpret human behavior.",
+                        correct: false,
+                        feedback: "Incorrect. Material remains belong to archeology. Yin-Yang is a Taoist symbol of balance and harmony between opposing but complementary forces."
+                    }
+                ]
+            },
+            {
+                id: "q50",
+                question: "Which answer best combines Buddhism's teaching about an individual and the self?",
+                choices: [
+                    {
+                        text: "An individual is a combination of form, sensation, perception, mental formations, and consciousness; the self is seen as an illusion.",
+                        correct: true,
+                        feedback: "Correct. Buddhism identifies the five aggregates as form, sensation, perception, mental formations, and consciousness, and describes the self as an illusion born from ignorance, control, or human-centered needs."
+                    },
+                    {
+                        text: "An individual is defined by significant relationships, and personal needs are subdued for the good of the many.",
+                        correct: false,
+                        feedback: "Incorrect. This describes Confucian relational identity and the subdued self. Buddhism emphasizes the five aggregates and the self as an illusion."
+                    },
+                    {
+                        text: "An individual lives by the Tao, rejects strict hierarchy, and becomes spontaneous through harmony with nature.",
+                        correct: false,
+                        feedback: "Incorrect. This describes Taoism. Buddhism teaches the five aggregates and treats the self as an illusion rather than the center of the picture."
+                    },
+                    {
+                        text: "An individual is developed through language, play, and games over time.",
+                        correct: false,
+                        feedback: "Incorrect. This describes Mead's development of the self. Buddhism teaches the five aggregates and the view that the self is an illusion."
+                    }
+                ]
+            }
+        ];
+
+        const questionList = document.querySelector("#questionList");
+        const quizStage = document.querySelector(".quiz-stage");
+        const answeredCount = document.querySelector("#answeredCount");
+        const scoreCount = document.querySelector("#scoreCount");
+        const progressBar = document.querySelector("#progressBar");
+        const statePill = document.querySelector("#statePill");
+        const resultBox = document.querySelector("#resultBox");
+        const warningBox = document.querySelector("#warningBox");
+        const questionNav = document.querySelector("#questionNav");
+        const checkBtn = document.querySelector("#checkBtn");
+        const retakeBtn = document.querySelector("#retakeBtn");
+        const prevQuestionBtn = document.querySelector("#prevQuestionBtn");
+        const nextQuestionBtn = document.querySelector("#nextQuestionBtn");
+        const letters = ["A", "B", "C", "D"];
+        let attempt = [];
+        let selected = {};
+        let checked = false;
+        let currentQuestionId = "";
+
+        function shuffle(items) {
+            const copy = [...items];
+            for (let i = copy.length - 1; i > 0; i -= 1) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
+        function buildAttempt() {
+            attempt = shuffle(quizItems).map((item) => ({
+                ...item,
+                choices: shuffle(item.choices).map((choice, index) => ({
+                    ...choice,
+                    key: `${item.id}-${index}-${choice.text.slice(0, 12)}`
+                }))
+            }));
+            selected = {};
+            checked = false;
+            currentQuestionId = attempt[0]?.id || "";
+            scoreCount.textContent = "--";
+            statePill.textContent = "In progress";
+            resultBox.classList.remove("show");
+            warningBox.classList.remove("show");
+            checkBtn.disabled = false;
+            render();
+            updateStatus();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+
+        function getCurrentQuestionIndex() {
+            const currentIndex = attempt.findIndex((item) => item.id === currentQuestionId);
+            return currentIndex >= 0 ? currentIndex : 0;
+        }
+
+        function getFirstOpenQuestionIndex() {
+            const firstOpenIndex = attempt.findIndex((item) => !selected[item.id]);
+            return firstOpenIndex >= 0 ? firstOpenIndex : attempt.length;
+        }
+
+        function canVisitQuestion(questionIndex) {
+            if (checked) {
+                return true;
+            }
+            const item = attempt[questionIndex];
+            if (!item) {
+                return false;
+            }
+            return Boolean(selected[item.id]) || questionIndex <= getFirstOpenQuestionIndex();
+        }
+
+        function goToQuestion(questionIndex, shouldScroll = false) {
+            if (!canVisitQuestion(questionIndex)) {
+                return;
+            }
+            currentQuestionId = attempt[questionIndex].id;
+            render();
+            updateStatus();
+            if (shouldScroll) {
+                quizStage.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+        }
+
+        function render() {
+            questionList.innerHTML = "";
+            const questionIndex = getCurrentQuestionIndex();
+            const item = attempt[questionIndex];
+            if (!item) {
+                renderQuestionNav();
+                updateQuestionControls();
+                return;
+            }
+
+            const hasSelection = Boolean(selected[item.id]);
+            const card = document.createElement("article");
+            card.className = `question-card${hasSelection ? " answered" : ""}${checked ? " checked" : ""}`;
+            card.dataset.questionId = item.id;
+            card.id = `question-${item.id}`;
+
+            const head = document.createElement("div");
+            head.className = "question-head";
+            head.innerHTML = `
+          <div class="number">${questionIndex + 1}</div>
+          <p class="question-text">${item.question}</p>
+        `;
+
+            const choices = document.createElement("div");
+            choices.className = "choices";
+
+            item.choices.forEach((choice, choiceIndex) => {
+                const button = document.createElement("button");
+                const isSelected = selected[item.id] === choice.key;
+                const isChoiceLocked = checked || hasSelection;
+                const shouldRevealChoice = checked || isSelected;
+                const shouldShowCorrect = checked || hasSelection;
+                const correctnessClass = shouldShowCorrect && choice.correct ? " correct" : "";
+                const selectedWrongClass = hasSelection && isSelected && !choice.correct ? " incorrect" : "";
+                const feedbackClass = shouldRevealChoice ? " show-feedback" : "";
+                button.type = "button";
+                button.className = `choice${isSelected ? " selected" : ""}${correctnessClass}${selectedWrongClass}${feedbackClass}${isChoiceLocked ? " locked" : ""}`;
+                button.disabled = isChoiceLocked;
+                button.dataset.questionId = item.id;
+                button.dataset.choiceKey = choice.key;
+                button.innerHTML = `
+            <span class="letter">${letters[choiceIndex]}</span>
+            <span class="choice-text">${choice.text}</span>
+            <span class="feedback"><strong>${choice.correct ? "Correct." : "Incorrect."}</strong> ${choice.feedback.replace(/^(Correct|Incorrect)\.\s*/, "")}</span>
+          `;
+                button.addEventListener("click", () => {
+                    selected[item.id] = choice.key;
+                    currentQuestionId = item.id;
+                    warningBox.classList.remove("show");
+                    render();
+                    updateStatus();
+                });
+                choices.appendChild(button);
+            });
+
+            card.append(head, choices);
+            questionList.appendChild(card);
+            renderQuestionNav();
+            updateQuestionControls();
+        }
+
+        function renderQuestionNav() {
+            questionNav.innerHTML = "";
+            attempt.forEach((item, questionIndex) => {
+                const button = document.createElement("button");
+                const isCurrent = currentQuestionId === item.id;
+                const isLocked = !canVisitQuestion(questionIndex);
+                button.type = "button";
+                button.className = `nav-btn${selected[item.id] ? " answered" : ""}${isCurrent ? " current" : ""}`;
+                button.disabled = isLocked;
+                button.textContent = questionIndex + 1;
+                button.setAttribute("aria-label", `Go to question ${questionIndex + 1}`);
+                if (isCurrent) {
+                    button.setAttribute("aria-current", "true");
+                }
+                button.addEventListener("click", () => {
+                    goToQuestion(questionIndex, true);
+                });
+                questionNav.appendChild(button);
+            });
+            syncActiveQuestionNav();
+        }
+
+        function syncActiveQuestionNav() {
+            const activeButton = questionNav.querySelector(".nav-btn.current");
+            activeButton?.scrollIntoView({
+                behavior: "smooth",
+                block: "nearest",
+                inline: "center"
+            });
+        }
+
+        function updateQuestionControls() {
+            const currentIndex = getCurrentQuestionIndex();
+            const currentItem = attempt[currentIndex];
+            const hasSelection = currentItem ? Boolean(selected[currentItem.id]) : false;
+            const nextIndex = currentIndex + 1;
+            const isLastQuestion = nextIndex >= attempt.length;
+            const allAnswered = Object.keys(selected).length >= attempt.length;
+            prevQuestionBtn.disabled = currentIndex <= 0;
+            if (isLastQuestion) {
+                nextQuestionBtn.disabled = checked || !allAnswered;
+                nextQuestionBtn.textContent = checked ? "Checked" : "Check Answers";
+            } else {
+                nextQuestionBtn.disabled = !checked && !hasSelection;
+                nextQuestionBtn.textContent = "Next Question";
+            }
+        }
+
+        function selectCurrentChoice(choiceIndex) {
+            const currentItem = attempt[getCurrentQuestionIndex()];
+            if (!currentItem || checked || selected[currentItem.id]) {
+                return;
+            }
+            const choice = currentItem.choices[choiceIndex];
+            if (!choice) {
+                return;
+            }
+            selected[currentItem.id] = choice.key;
+            currentQuestionId = currentItem.id;
+            warningBox.classList.remove("show");
+            render();
+            updateStatus();
+        }
+
+        function handleNextQuestion() {
+            const nextIndex = getCurrentQuestionIndex() + 1;
+            if (nextIndex >= attempt.length) {
+                checkAnswers();
+                return;
+            }
+            goToQuestion(nextIndex, true);
+        }
+
+        function updateStatus() {
+            const answered = Object.keys(selected).length;
+            answeredCount.textContent = answered;
+            progressBar.style.width = `${(answered / quizItems.length) * 100}%`;
+            if (!checked && answered < quizItems.length) {
+                statePill.textContent = "In progress";
+            } else if (!checked) {
+                statePill.textContent = "Ready to check";
+            }
+        }
+
+        function checkAnswers() {
+            const answered = Object.keys(selected).length;
+            if (answered < quizItems.length) {
+                warningBox.classList.add("show");
+            }
+
+            let score = 0;
+            attempt.forEach((item) => {
+                const chosen = item.choices.find((choice) => choice.key === selected[item.id]);
+                if (chosen && chosen.correct) {
+                    score += 1;
+                }
+            });
+
+            checked = true;
+            scoreCount.textContent = score;
+            statePill.textContent = "Checked";
+            resultBox.textContent = `Score: ${score} out of ${quizItems.length}`;
+            resultBox.classList.add("show");
+            render();
+            updateStatus();
+            resultBox.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+
+        checkBtn.addEventListener("click", checkAnswers);
+        retakeBtn.addEventListener("click", buildAttempt);
+        prevQuestionBtn.addEventListener("click", () => {
+            goToQuestion(getCurrentQuestionIndex() - 1, true);
+        });
+        nextQuestionBtn.addEventListener("click", handleNextQuestion);
+        document.addEventListener("keydown", (event) => {
+            const activeTag = document.activeElement?.tagName;
+            const isTyping = ["INPUT", "SELECT", "TEXTAREA"].includes(activeTag);
+            if (isTyping || event.altKey || event.ctrlKey || event.metaKey) {
+                return;
+            }
+            if (/^[1-4]$/.test(event.key)) {
+                event.preventDefault();
+                selectCurrentChoice(Number(event.key) - 1);
+            } else if (event.key === "ArrowLeft" && !prevQuestionBtn.disabled) {
+                event.preventDefault();
+                goToQuestion(getCurrentQuestionIndex() - 1, true);
+            } else if (event.key === "ArrowRight" && !nextQuestionBtn.disabled) {
+                event.preventDefault();
+                handleNextQuestion();
+            }
+        });
+
+        document.querySelector("#itemCount").textContent = `${quizItems.length} items`;
+        buildAttempt();
+    </script>
+</body>
+
+</html>
